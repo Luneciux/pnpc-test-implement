@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editais PNCP</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f0f2f5; --text: #1b1f24; --muted: #5f6b7a;
+    --border: #dde1e6; --accent: #1f6feb; --accent-text: #ffffff; --warn-bg: #fff4d6; --warn-border: #e0a800;
+    --warn-text: #7a5600; --danger: #c62828; --row-hover: #f3f6fb; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --text: #e6e9ed; --muted: #97a1ad;
+      --border: #2b323c; --accent: #4c8dff; --accent-text: #0b0d10; --warn-bg: #3a2f10; --warn-border: #d4a017;
+      --warn-text: #f5d27a; --danger: #ff6b6b; --row-hover: #1c222b; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1216; --surface: #171b21; --surface-2: #1e232b; --text: #e6e9ed; --muted: #97a1ad;
+    --border: #2b323c; --accent: #4c8dff; --accent-text: #0b0d10; --warn-bg: #3a2f10; --warn-border: #d4a017;
+    --warn-text: #f5d27a; --danger: #ff6b6b; --row-hover: #1c222b; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  header h1 { margin: 0; font-size: 18px; font-weight: 650; }
+  main { max-width: 1400px; margin: 0 auto; padding: 16px 20px 40px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .filtros { display: grid; gap: 10px 14px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); align-items: end; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); font-weight: 550; }
+  input, select, button { font: inherit; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px; min-width: 0; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { cursor: pointer; background: var(--surface); }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .6; cursor: progress; }
+  .linha { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .linha .cresce { flex: 1 1 220px; }
+  .spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid currentColor;
+    border-right-color: transparent; border-radius: 50%; animation: gira .7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .status { color: var(--muted); font-size: 13px; }
+  .status.erro { color: var(--danger); }
+  .resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: start; }
+  .stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+  .stat .rotulo { font-size: 12px; color: var(--muted); }
+  .stat .valor { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 99px; padding: 2px 9px; font-size: 12px; }
+  .tabela-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }
+  th { position: sticky; top: 0; background: var(--surface-2); font-size: 12px; color: var(--muted);
+    white-space: nowrap; user-select: none; }
+  th[data-col] { cursor: pointer; }
+  th[data-col]:hover { color: var(--text); }
+  th .seta { opacity: .7; margin-left: 3px; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  tr.urgente td:first-child { box-shadow: inset 3px 0 0 var(--warn-border); }
+  tr.urgente .enc { background: var(--warn-bg); color: var(--warn-text); border-radius: 5px; padding: 1px 6px; font-weight: 600; }
+  td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.nowrap { white-space: nowrap; }
+  .objeto { max-width: 520px; }
+  tr:not(.aberta) .objeto span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  a { color: var(--accent); }
+  .vazio { padding: 30px; text-align: center; color: var(--muted); }
+  .legenda { font-size: 12px; color: var(--muted); }
+  .legenda .enc { background: var(--warn-bg); color: var(--warn-text); border-radius: 5px; padding: 1px 6px; font-weight: 600; }
+  @media (max-width: 640px) {
+    header, main { padding-left: 16px; padding-right: 16px; }
+    .objeto { min-width: 240px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Editais abertos · PNCP</h1>
+  <button id="tema" type="button" title="Alternar tema claro/escuro">◐ Tema</button>
+</header>
+<main>
+  <form id="form" class="card">
+    <div class="filtros">
+      <label>UF
+        <select name="uf" id="uf"><option value="">Todas</option></select>
+      </label>
+      <label>Município (código IBGE)
+        <input name="municipio_ibge" inputmode="numeric" pattern="\d{7}" placeholder="ex.: 2304400">
+      </label>
+      <label>Modalidade
+        <select name="modalidade">
+          <option value="">Todas</option>
+          <option value="6">6 · Pregão eletrônico</option>
+          <option value="8">8 · Dispensa</option>
+          <option value="4">4 · Concorrência eletrônica</option>
+        </select>
+      </label>
+      <label>Data final
+        <input name="data_final" type="date" id="data_final" required>
+      </label>
+      <label>Palavras-chave (vírgula)
+        <input name="palavras_chave" placeholder="ex.: software, limpeza">
+      </label>
+      <label>Máx. de páginas
+        <input name="max_paginas" type="number" min="1" placeholder="sem limite" value="10">
+      </label>
+      <button class="primary" id="btn-buscar" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  <div class="card linha">
+    <label class="cresce">Buscas salvas
+      <select id="arquivos"><option value="">Carregando…</option></select>
+    </label>
+    <span id="status" class="status" role="status"></span>
+  </div>
+
+  <section id="resultado" hidden>
+    <div class="card resumo" id="resumo"></div>
+    <div class="linha" style="margin-bottom:10px">
+      <input id="filtro" class="cresce" type="search" placeholder="Filtrar tabela (órgão, objeto, município…)">
+      <button id="csv" type="button">Exportar CSV</button>
+      <span class="legenda"><span class="enc">dd/mm</span> encerra em até 7 dias</span>
+    </div>
+    <div class="tabela-wrap">
+      <table>
+        <thead><tr>
+          <th data-col="orgao">Órgão</th>
+          <th data-col="local">Município/UF</th>
+          <th data-col="modalidade">Modalidade</th>
+          <th data-col="objeto">Objeto</th>
+          <th data-col="valor_estimado" style="text-align:right">Valor estimado</th>
+          <th data-col="data_encerramento_proposta">Encerramento</th>
+          <th>Edital</th>
+        </tr></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const UFS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
+const $ = (s) => document.querySelector(s);
+const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const estado = { editais: [], ordem: { col: "data_encerramento_proposta", dir: 1 }, filtro: "", arquivo: "" };
+
+// ---------- tema ----------
+(function initTema() {
+  let salvo = null;
+  try { salvo = localStorage.getItem("tema"); } catch (_) {}
+  if (salvo) document.documentElement.dataset.theme = salvo;
+  $("#tema").addEventListener("click", () => {
+    const escuroAtual = document.documentElement.dataset.theme
+      ? document.documentElement.dataset.theme === "dark"
+      : matchMedia("(prefers-color-scheme: dark)").matches;
+    const novo = escuroAtual ? "light" : "dark";
+    document.documentElement.dataset.theme = novo;
+    try { localStorage.setItem("tema", novo); } catch (_) {}
+  });
+})();
+
+// ---------- filtros ----------
+UFS.forEach((uf) => $("#uf").append(new Option(uf, uf)));
+const d = new Date(); d.setDate(d.getDate() + 60);
+$("#data_final").value = d.toISOString().slice(0, 10);
+
+function setStatus(msg, erro = false) {
+  $("#status").textContent = msg;
+  $("#status").classList.toggle("erro", erro);
+}
+
+$("#form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const f = new FormData(ev.target);
+  const corpo = {
+    uf: f.get("uf") || null,
+    municipio_ibge: f.get("municipio_ibge") || null,
+    modalidade: f.get("modalidade") ? Number(f.get("modalidade")) : null,
+    data_final: f.get("data_final").replaceAll("-", ""),
+    palavras_chave: f.get("palavras_chave") || null,
+    max_paginas: f.get("max_paginas") ? Number(f.get("max_paginas")) : null,
+  };
+  const btn = $("#btn-buscar");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Buscando…';
+  setStatus("Consultando o PNCP, pode levar alguns minutos…");
+  try {
+    const r = await fetch("/api/buscar", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo),
+    });
+    const dados = await r.json();
+    if (!r.ok) throw new Error(typeof dados.detail === "string" ? dados.detail : JSON.stringify(dados.detail));
+    mostrar(dados);
+    await carregarArquivos(dados.arquivo);
+    setStatus(`${dados.total} editais salvos em data/${dados.arquivo}`);
+  } catch (e) {
+    setStatus("Erro na busca: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Buscar";
+  }
+});
+
+// ---------- buscas salvas ----------
+async function carregarArquivos(selecionado) {
+  const sel = $("#arquivos");
+  try {
+    const lista = await (await fetch("/api/arquivos")).json();
+    sel.innerHTML = "";
+    sel.append(new Option(lista.length ? "— selecione uma busca salva —" : "Nenhuma busca salva", ""));
+    lista.forEach((a) => sel.append(new Option(rotuloArquivo(a.nome), a.nome)));
+    sel.value = selecionado || "";
+  } catch (e) {
+    sel.innerHTML = '<option value="">Erro ao listar</option>';
+  }
+}
+function rotuloArquivo(nome) {
+  const m = nome.match(/editais_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]} ${m[4]}:${m[5]} — ${nome}` : nome;
+}
+$("#arquivos").addEventListener("change", async (ev) => {
+  const nome = ev.target.value;
+  if (!nome) return;
+  setStatus("Carregando " + nome + "…");
+  try {
+    const r = await fetch("/api/arquivos/" + encodeURIComponent(nome));
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const dados = await r.json();
+    mostrar(dados);
+    setStatus(`${dados.total} editais carregados de data/${nome}`);
+  } catch (e) {
+    setStatus("Erro ao carregar: " + e.message, true);
+  }
+});
+
+// ---------- tabela ----------
+function mostrar(dados) {
+  estado.editais = dados.editais.map((e) => ({
+    ...e,
+    local: [e.municipio, e.uf].filter(Boolean).join("/"),
+    _busca: [e.orgao, e.municipio, e.uf, e.modalidade, e.objeto, e.cnpj, e.id].join(" ").toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, ""),
+  }));
+  estado.arquivo = dados.arquivo;
+  $("#resultado").hidden = false;
+  render();
+}
+
+function visiveis() {
+  const termo = estado.filtro.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  const lista = termo ? estado.editais.filter((e) => e._busca.includes(termo)) : estado.editais.slice();
+  const { col, dir } = estado.ordem;
+  lista.sort((a, b) => {
+    const va = a[col], vb = b[col];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === "number") return (va - vb) * dir;
+    return String(va).localeCompare(String(vb), "pt-BR") * dir;
+  });
+  return lista;
+}
+
+function diasAte(iso) {
+  if (!iso) return null;
+  return (new Date(iso) - new Date()) / 86400000;
+}
+function fmtData(iso) {
+  if (!iso) return "—";
+  const dt = new Date(iso);
+  return dt.toLocaleDateString("pt-BR") + " " + dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function render() {
+  const lista = visiveis();
+  // resumo
+  const total = lista.reduce((s, e) => s + (e.valor_estimado || 0), 0);
+  const porMod = {};
+  lista.forEach((e) => { porMod[e.modalidade || "—"] = (porMod[e.modalidade || "—"] || 0) + 1; });
+  const urgentes = lista.filter((e) => { const d = diasAte(e.data_encerramento_proposta); return d != null && d >= 0 && d <= 7; }).length;
+  $("#resumo").innerHTML = `
+    <div class="stat"><div class="rotulo">Editais${estado.filtro ? " (filtrados)" : ""}</div><div class="valor">${lista.length.toLocaleString("pt-BR")}</div></div>
+    <div class="stat"><div class="rotulo">Valor estimado somado</div><div class="valor">${brl.format(total)}</div></div>
+    <div class="stat"><div class="rotulo">Encerram em até 7 dias</div><div class="valor">${urgentes}</div></div>
+    <div class="stat"><div class="rotulo">Por modalidade</div><div class="chips">${
+      Object.entries(porMod).sort((a, b) => b[1] - a[1]).map(([m, n]) => `<span class="chip">${esc(m)}: <b>${n}</b></span>`).join("") || "—"
+    }</div></div>`;
+
+  // cabeçalho
+  document.querySelectorAll("th[data-col]").forEach((th) => {
+    th.querySelector(".seta")?.remove();
+    if (th.dataset.col === estado.ordem.col) {
+      th.insertAdjacentHTML("beforeend", `<span class="seta">${estado.ordem.dir > 0 ? "▲" : "▼"}</span>`);
+      th.setAttribute("aria-sort", estado.ordem.dir > 0 ? "ascending" : "descending");
+    } else th.removeAttribute("aria-sort");
+  });
+
+  // corpo
+  if (!lista.length) {
+    $("#corpo").innerHTML = `<tr><td colspan="7" class="vazio">Nenhum edital encontrado.</td></tr>`;
+    return;
+  }
+  $("#corpo").innerHTML = lista.map((e) => {
+    const d = diasAte(e.data_encerramento_proposta);
+    const urgente = d != null && d >= 0 && d <= 7;
+    return `<tr class="${urgente ? "urgente" : ""}" title="Clique para expandir o objeto">
+      <td>${esc(e.orgao)}</td>
+      <td class="nowrap">${esc(e.local)}</td>
+      <td>${esc(e.modalidade)}</td>
+      <td class="objeto"><span>${esc(e.objeto)}</span></td>
+      <td class="num">${e.valor_estimado != null ? brl.format(e.valor_estimado) : "—"}</td>
+      <td class="nowrap"><span class="enc">${fmtData(e.data_encerramento_proposta)}</span></td>
+      <td class="nowrap">${e.link_edital ? `<a href="${esc(e.link_edital)}" target="_blank" rel="noopener">abrir ↗</a>` : "—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.querySelector("thead").addEventListener("click", (ev) => {
+  const th = ev.target.closest("th[data-col]");
+  if (!th) return;
+  const col = th.dataset.col;
+  estado.ordem = { col, dir: estado.ordem.col === col ? -estado.ordem.dir : 1 };
+  render();
+});
+$("#corpo").addEventListener("click", (ev) => {
+  if (ev.target.closest("a")) return;
+  ev.target.closest("tr")?.classList.toggle("aberta");
+});
+let debounce;
+$("#filtro").addEventListener("input", (ev) => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => { estado.filtro = ev.target.value; render(); }, 150);
+});
+
+// ---------- CSV ----------
+$("#csv").addEventListener("click", () => {
+  const cols = [
+    ["id", "ID PNCP"], ["orgao", "Órgão"], ["cnpj", "CNPJ"], ["municipio", "Município"], ["uf", "UF"],
+    ["modalidade", "Modalidade"], ["objeto", "Objeto"], ["valor_estimado", "Valor estimado"],
+    ["data_abertura_proposta", "Abertura proposta"], ["data_encerramento_proposta", "Encerramento proposta"],
+    ["link_edital", "Link edital"],
+  ];
+  const cel = (v) => {
+    if (v == null) return "";
+    const s = typeof v === "number" ? String(v).replace(".", ",") : String(v);
+    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const linhas = [cols.map((c) => c[1]).join(";")]
+    .concat(visiveis().map((e) => cols.map(([k]) => cel(e[k])).join(";")));
+  const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (estado.arquivo || "editais").replace(/\.json$/, "") + ".csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+carregarArquivos();
+</script>
+</body>
+</html>
